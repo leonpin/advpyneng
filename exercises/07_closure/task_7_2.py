@@ -34,3 +34,23 @@ Out[9]: 84
 In [10]: toys(24)
 Out[10]: 108
 """
+
+
+def count_total():
+    summ = 0
+
+    def add_price(price):
+        nonlocal summ
+        summ += price
+        return summ
+
+    return add_price
+
+
+if __name__ == "__main__":
+    books = count_total()
+    print(books(25))
+    print(books(15))
+    toys = count_total()
+    print(toys(67))
+    print(toys(17))

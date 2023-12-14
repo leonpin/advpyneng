@@ -85,7 +85,8 @@ $ python task_4_3.py -y devices_task_4_3.yaml ping
 Доступные адреса:   192.168.100.1, 192.168.100.2, 192.168.100.3
 Недоступные адреса:
 
-Команда show отправляет указанную команду show на все указанные устройства из файла -y devices_task_4_3.yaml и выводит результат:
+Команда show отправляет указанную команду show на все указанные устройства из файла -y devices_task_4_3.yaml и
+выводит результат:
 
 $ python task_4_3.py -y devices_task_4_3.yaml show "sh clock"
 {'192.168.100.1': '*09:22:19.639 UTC Mon Sep 21 2020',
@@ -155,9 +156,8 @@ def ping_ip_addresses(ip_list, threads):
 
 
 def parse_command_dynamic(
-    command_output, attributes_dict, index_file="index", templ_path="templates"
+        command_output, attributes_dict, index_file="index", templ_path="templates"
 ):
-
     cli_table = clitable.CliTable(index_file, templ_path)
     cli_table.ParseCmd(command_output, attributes_dict)
     return [dict(zip(cli_table.header, row)) for row in cli_table]
@@ -190,3 +190,52 @@ def send_command_to_devices(devices, threads, show=None, config=None):
             result_dict[device["host"]] = future.result()
     return result_dict
 
+
+@click.group()
+@click.option("--yaml_params", "-y", type=click.File("r"), default="devices_task_4_3.yaml", show_default=True)
+@click.option("--threads", "-t", default=5, show_default=True)
+@click.pass_context
+def cli(context, yaml_params, threads):
+    devices = yaml.safe_load(yaml_params)
+    context.obj = {"devices": devices, "threads": threads}
+
+
+@cli.command()
+@click.argument("filename", required=True, type=click.File("r"))
+@click.pass_context
+def config(context, filename):
+    """Отправить конфигурационные команды из файла COMMANDS"""
+    commands = filename.read()
+    pprint(send_command_to_devices(context.obj["devices"], context.obj["threads"], config=commands.strip().split("\n")))
+    # pprint(commands.strip().split("\n"))
+
+@cli.command()
+@click.pass_context
+def ping(context):
+    """Пинг устройств из файла YAML_PARAMS"""
+    ip_list = [dev['host'] for dev in context.obj["devices"]]
+    av, unav = ping_ip_addresses(ip_list, context.obj["threads"])
+    print("Доступные адреса:", ", ".join(av))
+    print("Недоступные адреса:", ", ".join(unav))
+
+
+@cli.command()
+@click.argument("command")
+@click.option("-o", "--output_file", type=click.File("w"))
+@click.option("-p", "--parse", is_flag=True)
+@click.pass_context
+def show(context, command, output_file, parse):
+    """Отправить show COMMAND и опционально парсить (PARSE) ее с помощью textfsm
+  и/или записать результат в OUTPUT_FILE"""
+    output = send_command_to_devices(context.obj["devices"], context.obj["threads"], show=command)
+    if parse:
+        attr = {"Vendor": "cisco_ios", "Command": command}
+        output = {key: parse_command_dynamic(value, attr) for key, value in output.items()}
+    if output_file:
+        yaml.dump(output, output_file)
+    else:
+        pprint(output)
+
+
+if __name__ == "__main__":
+    cli()

@@ -61,6 +61,21 @@ device_params = {
 }
 
 
+def retry(times):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            for i in range(times+1):
+                result = func(*args, **kwargs)
+                if result:
+                    break
+            else:
+                return
+            return result
+        return wrapper
+    return decorator
+
+
+@retry(times=3)
 def send_show_command(device, show_command):
     print("Подключаюсь к", device["host"])
     try:

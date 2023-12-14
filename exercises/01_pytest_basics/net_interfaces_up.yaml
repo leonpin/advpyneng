@@ -1,10 +1,12 @@
 192.168.100.1:
  - Tunnel0
  - Loopback1
- - Ethernet0/0
- - Ethernet0/1.100
- - Ethernet0/1.200
+ - FastEthernet0/0
+ - FastEthernet0/1.100
 192.168.100.2:
  - Loopback0
- - Ethernet0/0
- - Ethernet0/1
+ - FastEthernet0/0
+ - FastEthernet0/1
+192.168.100.3:
+ - Loopback0
+ - FastEthernet0/0

@@ -13,21 +13,22 @@ from concurrent.futures import ThreadPoolExecutor
 from pprint import pprint
 from itertools import repeat
 import yaml
-from netmiko import ConnectHandler
-from netmiko.ssh_exception import SSHException
+from netmiko import ConnectHandler, NetmikoTimeoutException, NetmikoAuthenticationException
+# from netmiko.ssh_exception import SSHException
+from typing import Dict, List
 
 
-def send_show(device_dict, command):
+def send_show(device_dict: Dict[str, str], command: str) -> str:
     try:
         with ConnectHandler(**device_dict) as ssh:
             ssh.enable()
             result = ssh.send_command(command)
         return result
-    except SSHException as error:
+    except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
         return str(error)
 
 
-def send_command_to_devices(devices, command, max_workers=3):
+def send_command_to_devices(devices: List[Dict[str, str]], command: str, max_workers: int = 3) -> Dict[str, str]:
     data = {}
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         result = executor.map(send_show, devices, repeat(command))

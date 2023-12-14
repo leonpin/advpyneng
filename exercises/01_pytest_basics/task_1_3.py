@@ -61,6 +61,7 @@ def send_show(device, show_commands):
         return cmd_dict
     except (ScrapliException, SSHException, socket.timeout, OSError) as error:
         print(f"Device {host}, Transport {transport}, Error {error}")
+        # raise
 
 
 if __name__ == "__main__":

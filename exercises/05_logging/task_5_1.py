@@ -2,9 +2,9 @@
 """
 Задание 5.1
 
-Добавить логирование в скрипт с выводом информации на стандартный поток вывода.
-Формат логов и сообщения надо определить из примеров вывода ниже. Кроме того,
-это должен быть единственный вывод модуля logging, сообщения других модулей надо выводить только если их уровень WARNING.
+Добавить логирование в скрипт с выводом информации на стандартный поток вывода. Формат логов и сообщения надо
+определить из примеров вывода ниже. Кроме того, это должен быть единственный вывод модуля logging, сообщения других
+модулей надо выводить только если их уровень WARNING.
 
 
 Пример вывода при успешном подключении на все три устройства:
@@ -33,17 +33,14 @@ ThreadPoolExecutor-0_0 2020-09-11 10:07:27,775 root WARNING: Authentication fail
  '192.168.100.3': '*10:07:26.014 UTC Fri Sep 11 2020'}
 
 
-Пример вывода при ошибке перехода в enable на первом устройстве (неправильный пароль на enable):
-$ python task_5_1.py
-ThreadPoolExecutor-0_0 2020-09-11 10:07:52,096 root DEBUG: Подключение к 192.168.100.1
-ThreadPoolExecutor-0_1 2020-09-11 10:07:52,102 root DEBUG: Подключение к 192.168.100.2
-ThreadPoolExecutor-0_2 2020-09-11 10:07:52,104 root DEBUG: Подключение к 192.168.100.3
-ThreadPoolExecutor-0_1 2020-09-11 10:07:53,462 root DEBUG: Получен ответ от 192.168.100.2
-ThreadPoolExecutor-0_2 2020-09-11 10:07:53,589 root DEBUG: Получен ответ от 192.168.100.3
-ThreadPoolExecutor-0_0 2020-09-11 10:08:13,343 root WARNING: Не получилось перейти в режим enable
-{'192.168.100.1': ValueError("Failed to enter enable mode. Please ensure you pass the 'secret' argument to ConnectHandler."),
- '192.168.100.2': '*10:07:53.219 UTC Fri Sep 11 2020',
- '192.168.100.3': '*10:07:53.347 UTC Fri Sep 11 2020'}
+Пример вывода при ошибке перехода в enable на первом устройстве (неправильный пароль на enable): $ python task_5_1.py
+ThreadPoolExecutor-0_0 2020-09-11 10:07:52,096 root DEBUG: Подключение к 192.168.100.1 ThreadPoolExecutor-0_1
+2020-09-11 10:07:52,102 root DEBUG: Подключение к 192.168.100.2 ThreadPoolExecutor-0_2 2020-09-11 10:07:52,
+104 root DEBUG: Подключение к 192.168.100.3 ThreadPoolExecutor-0_1 2020-09-11 10:07:53,462 root DEBUG: Получен ответ
+от 192.168.100.2 ThreadPoolExecutor-0_2 2020-09-11 10:07:53,589 root DEBUG: Получен ответ от 192.168.100.3
+ThreadPoolExecutor-0_0 2020-09-11 10:08:13,343 root WARNING: Не получилось перейти в режим enable {'192.168.100.1':
+ValueError("Failed to enter enable mode. Please ensure you pass the 'secret' argument to ConnectHandler."),
+'192.168.100.2': '*10:07:53.219 UTC Fri Sep 11 2020', '192.168.100.3': '*10:07:53.347 UTC Fri Sep 11 2020'}
 
 Пример вывода при недоступном IP-адресе:
 $ python task_5_1.py
@@ -62,9 +59,10 @@ Common causes of this problem are:
 Device settings: cisco_ios 192.168.100.13:22
 
 
-{'192.168.100.13': NetmikoTimeoutException('TCP connection to device failed.\n\nCommon causes of this problem are:\n1. Incorrect hostname or IP address.\n2. Wrong TCP port.\n3. Intermediate firewall blocking access.\n\nDevice settings: cisco_ios 192.168.100.13:22\n\n'),
- '192.168.100.2': '*10:09:09.946 UTC Fri Sep 11 2020',
- '192.168.100.3': '*10:09:09.945 UTC Fri Sep 11 2020'}
+{'192.168.100.13': NetmikoTimeoutException('TCP connection to device failed.\n\nCommon causes of this problem
+are:\n1. Incorrect hostname or IP address.\n2. Wrong TCP port.\n3. Intermediate firewall blocking access.\n\nDevice
+settings: cisco_ios 192.168.100.13:22\n\n'), '192.168.100.2': '*10:09:09.946 UTC Fri Sep 11 2020', '192.168.100.3':
+'*10:09:09.945 UTC Fri Sep 11 2020'}
 
 
 Для заданий этого раздела нет тестов.
@@ -74,21 +72,34 @@ from concurrent.futures import ThreadPoolExecutor
 from pprint import pprint
 from itertools import repeat
 import yaml
-from netmiko import ConnectHandler
-from netmiko.ssh_exception import SSHException
+import logging
+from netmiko import ConnectHandler, NetmikoTimeoutException, NetmikoAuthenticationException
+# from netmiko.ssh_exception import SSHException
+
+logging.getLogger("netmiko").setLevel(logging.WARNING)
+logging.getLogger("paramiko").setLevel(logging.WARNING)
+logging.basicConfig(format='{threadName} {asctime} {name} {levelname} {message}', level=logging.DEBUG, style='{')
 
 
 def send_show(device_dict, command):
     ip = device_dict["host"]
+    logging.debug(f'Подключение к {ip}')
     try:
         with ConnectHandler(**device_dict) as ssh:
             ssh.enable()
             result = ssh.send_command(command)
-        return result
-    except SSHException as error:
+            logging.debug(f'Получен ответ от {ip}')
+    except NetmikoTimeoutException as error:
+        logging.warning(f'TCP connection to device failed')
+        return error
+    except NetmikoAuthenticationException as error:
+        logging.warning(f'Authentication failed')
         return error
     except ValueError as error:
+        logging.warning(f'Не получилось перейти в режим enable')
         return error
+    else:
+        return result
 
 
 def send_command_to_devices(devices, command, max_workers=5):

@@ -19,6 +19,16 @@ R1#
 Для заданий этого раздела нет тестов.
 """
 from cisco_telnet_class import CiscoTelnet
+import logging
+import sys
+
+logger = logging.getLogger('cisco_telnet_class')
+logger.setLevel(logging.DEBUG)
+console = logging.StreamHandler(sys.stdout)
+console.setLevel(logging.DEBUG)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%H:%M:%S")
+console.setFormatter(formatter)
+logger.addHandler(console)
 
 
 if __name__ == "__main__":

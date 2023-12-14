@@ -29,10 +29,10 @@ ValueError: Все аргументы должны быть строками
 
 
 def all_args_str(func):
-    def wrapper(*args):
-        if not all(isinstance(arg, str) for arg in args):
+    def wrapper(*args, **kwargs):
+        if not (all(isinstance(arg, str) for arg in args) and all(isinstance(kwarg, str) for kwarg in kwargs.values())):
             raise ValueError("Все аргументы должны быть строками")
-        return func(*args)
+        return func(*args, **kwargs)
 
     return wrapper
 
@@ -46,3 +46,4 @@ if __name__ == "__main__":
     # пример вызова с передачей ключевых аргументов
     # до выполнения задания, будет вызывать ошибку
     concat_str(str1=2, str2=1)
+    # print(concat_str(str1='2', str2='1'))

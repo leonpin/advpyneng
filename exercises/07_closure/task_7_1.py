@@ -35,7 +35,12 @@ def netmiko_ssh(**params_dict):
     ssh.enable()
 
     def send_show_command(command):
-        return ssh.send_command(command)
+        if command == 'close':
+            print('Соединение закрыто')
+            ssh.disconnect()
+            return
+        else:
+            return ssh.send_command(command)
 
     return send_show_command
 
@@ -43,3 +48,4 @@ def netmiko_ssh(**params_dict):
 if __name__ == "__main__":
     r1 = netmiko_ssh(**device_params)
     print(r1("sh clock"))
+    r1("close")

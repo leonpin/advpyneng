@@ -22,6 +22,7 @@ from pprint import pprint
 def get_int_vlan_map(config_as_str):
     access_port_dict = {}
     trunk_port_dict = {}
+    current_interface = 0
     for line in config_as_str.splitlines():
         if line.startswith("interface") and "Ethernet" in line:
             current_interface = line.split()[-1]

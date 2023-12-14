@@ -53,6 +53,7 @@ from netmiko import (
     NetMikoAuthenticationException,
     NetMikoTimeoutException,
 )
+from time import sleep
 
 device_params = {
     "device_type": "cisco_ios",
@@ -63,6 +64,24 @@ device_params = {
 }
 
 
+def retry(times, delay):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            for i in range(times+1):
+                result = func(*args, **kwargs)
+                if result:
+                    break
+                if i < times:
+                    print(f'Повторное подключение через {delay} сек')
+                    sleep(delay)
+            else:
+                return
+            return result
+        return wrapper
+    return decorator
+
+
+@retry(times=2, delay=1)
 def send_show_command(device, show_command):
     print("Подключаюсь к", device["host"])
     try:

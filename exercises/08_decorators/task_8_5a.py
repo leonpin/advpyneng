@@ -44,9 +44,34 @@ Out[16]: 5
 """
 
 
+def count_calls(func):
+    calls = 0
+
+    def wrapper(*args):
+        nonlocal calls
+        calls += 1
+        # print(f'Всего вызовов: {calls}')
+        wrapper.total_calls = calls
+        return func(*args)
+    setattr(wrapper, 'total_calls', calls)
+    # wrapper.total_calls = calls
+    return wrapper
+
+
+@count_calls
 def f1():
     return True
 
 
+@count_calls
 def f2():
     return False
+
+
+if __name__ == "__main__":
+    for _ in range(3):
+        f1()
+    f1()
+    print(f1.total_calls)
+    f2()
+    print(f2.total_calls)

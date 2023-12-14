@@ -7,20 +7,25 @@
 
 Проверить код с помощью mypy, если возникли какие-то ошибки, исправить их.
 """
+from typing import Dict, Tuple
+
+dict_tuple = Dict[Tuple[str, str], Tuple[str, str]]
+tuple_two_str = Tuple[str, str]
 
 
 class Topology:
-    def __init__(self, topology_dict):
+    def __init__(self, topology_dict: dict_tuple) -> None:
         self.topology = self._normalize(topology_dict)
 
-    def _normalize(self, topology_dict):
+    @staticmethod
+    def _normalize(topology_dict: dict_tuple) -> dict_tuple:
         normalized_topology = {}
         for box, neighbor in topology_dict.items():
-            if not neighbor in normalized_topology:
+            if neighbor not in normalized_topology:
                 normalized_topology[box] = neighbor
         return normalized_topology
 
-    def delete_link(self, from_port, to_port):
+    def delete_link(self, from_port: tuple_two_str, to_port: tuple_two_str) -> None:
         if self.topology.get(from_port) == to_port:
             del self.topology[from_port]
         elif self.topology.get(to_port) == from_port:

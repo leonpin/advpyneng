@@ -21,6 +21,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pprint import pprint
 import yaml
+import click
 from cisco_telnet_class import CiscoTelnet
 
 
@@ -36,15 +37,28 @@ def send_command_to_devices(devices, command, threads=5):
         futures = [
             executor.submit(send_show_command, device, command) for device in devices
         ]
-        for future in as_completed(futures):
-            results.append(future.result())
+        with click.progressbar(length=len(futures), label="Connecting to devices") as bar:
+            for future in as_completed(futures):
+                results.append(future.result())
+                bar.update(1)
     return results
 
 
 # Это просто заготовка, чтобы не забыть, что click надо применять к этой функции
-def cli():
-    # pprint(send_command_to_devices(devices, command, threads))
-    pass
+@click.command()
+@click.argument("command", required=True)
+@click.argument("ip_list", nargs=-1, required=True)
+@click.option("-u", "--username", prompt=True)
+@click.option("-p", "--password", prompt=True, hide_input=True)
+@click.option("-s", "--secret", prompt=True, hide_input=True)
+@click.option("--threads", "-t", default=5, show_default=True, type=click.IntRange(1, 10))
+@click.option("--timed", is_flag=True)
+def cli(command, ip_list, username, password, secret, threads, timed):
+    start = datetime.now()
+    devices = [{"ip": ipaddr, "username": username, "password": password, "enable_password": secret} for ipaddr in ip_list]
+    pprint(send_command_to_devices(devices, command, threads))
+    if timed:
+        print(f"Время выполнения скрипта: {str(datetime.now() - start).split('.')[0]}")
 
 
 if __name__ == "__main__":

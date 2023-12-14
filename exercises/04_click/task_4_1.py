@@ -4,8 +4,9 @@
 
 Создать интерфейс командной строки для скрипта:
 
-* аргумент cdp_filenames, который ожидает один или более файлов с выводом команды sh cdp neighbors
-* опция --output-filename, с коротким вариантом -o - CSV файл в который надо записать результат выполнения (обязательное значение)
+* аргумент cdp_filenames, который ожидает один или более файлов с выводом команды sh cdp neighbors * опция
+--output-filename, с коротким вариантом -o - CSV файл в который надо записать результат выполнения (обязательное
+значение)
 
 При запуске скрипта, файлы cdp_filenames и output-filename надо передать как аргументы функции parse_cdp_to_csv,
 обработать вывод команды sh cdp neighbors с помощью функции parse_sh_cdp_neighbors и записать результат в csv файл.
@@ -32,6 +33,7 @@ $ python task_4_1.py sh_cdp_n_r[1-4]* -o result.csv
 """
 import csv
 import re
+import click
 from pprint import pprint
 
 
@@ -61,9 +63,11 @@ def parse_cdp_to_csv(filenames, output_csv):
 
 
 # Это просто заготовка, чтобы не забыть, что click надо применять к этой функции
-def cli():
-    # parse_cdp_to_csv(cdp_filenames, output_filename)
-    pass
+@click.command()
+@click.argument("cdp_filenames", nargs=-1)
+@click.option("-o", "--output-filename", required=True)
+def cli(cdp_filenames, output_filename):
+    parse_cdp_to_csv(cdp_filenames, output_filename)
 
 
 if __name__ == "__main__":

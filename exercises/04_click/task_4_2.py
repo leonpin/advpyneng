@@ -4,9 +4,9 @@
 
 Создать интерфейс командной строки для скрипта:
 
-* аргумент command - команда которую надо отправить на оборудование
-* опция --yaml-params, с коротким вариантом -y - YAML файл с параметрами подключения к оборудованию (devices.yaml). Тип click.File
-* опция --threads, с коротким вариантом -t - количество потоков. Значение по умолчанию - 5, диапазон возможных значений 1-10.
+* аргумент command - команда которую надо отправить на оборудование * опция --yaml-params, с коротким вариантом -y -
+YAML файл с параметрами подключения к оборудованию (devices.yaml). Тип click.File * опция --threads, с коротким
+вариантом -t - количество потоков. Значение по умолчанию - 5, диапазон возможных значений 1-10.
 
 Применить декораторы к функции cli!
 
@@ -45,6 +45,7 @@ Error: Invalid value for '--threads' / '-t': 20 is not in the valid range of 1 t
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pprint import pprint
 import yaml
+import click
 from cisco_telnet_class import CiscoTelnet
 
 
@@ -66,10 +67,13 @@ def send_command_to_devices(devices, command, threads):
 
 
 # Это просто заготовка, чтобы не забыть, что click надо применять к этой функции
-def cli():
-    # devices = yaml.safe_load(yaml_params)
-    # pprint(send_command_to_devices(devices, command, threads), width=120)
-    pass
+@click.command()
+@click.argument("command")
+@click.option("--yaml_params", "-y", required=True, type=click.File("r"))
+@click.option("--threads", "-t", default=5, show_default=True, type=click.IntRange(1, 10))
+def cli(command, yaml_params, threads):
+    devices = yaml.safe_load(yaml_params)
+    pprint(send_command_to_devices(devices, command, threads), width=120)
 
 
 if __name__ == "__main__":

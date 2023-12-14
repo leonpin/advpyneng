@@ -7,7 +7,7 @@ import logging
 
 import yaml
 from netmiko import ConnectHandler, NetMikoAuthenticationException
-from netmiko.ssh_exception import SSHException
+from paramiko.ssh_exception import SSHException
 from rich.logging import RichHandler
 
 

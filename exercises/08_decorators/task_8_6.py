@@ -51,6 +51,36 @@ Out[11]: True
 import ipaddress
 
 
+def total_order(cls):
+    methods = vars(cls).keys()
+    if not ('__lt__' in methods and '__eq__' in methods):
+        raise ValueError('Методы __eq__ и __lt__ не определены')
+
+    def __ge__(self, other):
+        result = (self == other or not self < other)
+        return result
+
+    def __ne__(self, other):
+        result = not (self == other)
+        return result
+
+    def __le__(self, other):
+        result = (self == other or self < other)
+        return result
+
+    def __gt__(self, other):
+        result = not (self == other or self < other)
+        return result
+
+    cls.__ge__ = __ge__
+    cls.__ne__ = __ne__
+    cls.__le__ = __le__
+    cls.__gt__ = __gt__
+
+    return cls
+
+
+@total_order
 class IPAddress:
     def __init__(self, ip):
         self._ip = int(ipaddress.ip_address(ip))
@@ -65,3 +95,8 @@ class IPAddress:
     def __lt__(self, other):
         return self._ip < other._ip
 
+
+if __name__ == "__main__":
+    ip1 = IPAddress('10.10.1.1')
+    ip2 = IPAddress('10.2.1.1')
+    print(ip1 > ip2)
