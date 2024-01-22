@@ -13,13 +13,13 @@ from task_1_4 import CiscoTelnet
 #         dev_telnet['secret'] = dev['auth_secondary']
 #         devices_telnet.append(dev_telnet.copy())
 
-
-r1_params = {
-    "host": "192.168.100.1",
-    "username": "cisco",
-    "password": "cisco",
-    "secret": "cisco",
-}
+#
+# r1_params = {
+#     "host": "192.168.100.1",
+#     "username": "cisco",
+#     "password": "cisco",
+#     "secret": "cisco",
+# }
 
 r1_hostname = "R"
 
@@ -41,8 +41,8 @@ def test_class(telnet_conn):
     assert prompt in ('>', '#')
 
 
-@pytest.mark.parametrize('command', ['sh clock', 'sh run | i hostname'])
-def test_command(command):
-    with CiscoTelnet(**r1_params) as telnet:
-        assert r1_hostname in telnet.send_showa_command(command)
-
+@pytest.mark.parametrize('command', ['sh clock', 'sh run | i hostname'], ids=['sh clock', 'sh run'])
+def test_command(command, telnet_conn):
+    # with CiscoTelnet(**r1_params) as telnet:
+    #     assert r1_hostname in telnet.send_show_command(command)
+    assert r1_hostname in telnet_conn.send_show_command(command)
