@@ -58,3 +58,65 @@ In [14]: str(net1)
 Out[14]: 'IPv4Network 8.8.4.0/29'
 
 '''
+import ipaddress
+
+
+class IPv4Network:
+    def __init__(self, network, gw=None):
+        self.network = network
+        self._subnet = ipaddress.ip_network(network)
+        self.hosts = tuple([str(ip) for ip in self._subnet.hosts()])
+        self.allocated = set()
+        self.unassigned = set(self.hosts)
+        self.broadcast = str(self._subnet.broadcast_address)
+        if gw:
+            self.gw = gw
+            self.allocate_ip(self.gw)
+
+    def allocate_ip(self, ip):
+        if ip in self.hosts:
+            if ip in self.unassigned:
+                self.allocated.add(ip)
+                self.unassigned.discard(ip)
+            else:
+                raise ValueError(f'IP-адрес уже выделен')
+        else:
+            raise ValueError(f'IP - адрес не входит в сеть {self.network}')
+
+    def free_ip(self, ip):
+        if ip in self.allocated:
+            self.unassigned.add(ip)
+            self.allocated.discard(ip)
+        else:
+            raise ValueError(f'IP-адрес свободен')
+
+    def __getitem__(self, item):
+        return self.hosts[item]
+
+    def __len__(self):
+        return len(self.hosts)
+
+    def __iter__(self):
+        return iter(self.hosts)
+
+    def __str__(self):
+        return f'IPv4Network: {self.network}'
+
+    def __repr__(self):
+        return f'IPv4Network("{self.network}")'
+
+    def __contains__(self, item):
+        return item in self.hosts
+
+    def count(self, item):
+        return self.hosts.count(item)
+
+    def index(self, item):
+        return self.hosts.index(item)
+
+
+if __name__ == "__main__":
+    # Примеры обращения к переменным и вызова методов
+    net1 = IPv4Network("10.1.1.0/29")
+    print(repr(net1))
+    print(net1.index('10.1.1.6'))
